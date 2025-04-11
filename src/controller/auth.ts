@@ -1,4 +1,4 @@
-import {Request ,Response} from 'express'
+import {NextFunction, Request ,Response} from 'express'
 import {hashSync, compareSync} from 'bcrypt'
 import { prismaClient } from '..'
 import * as jwt from 'jsonwebtoken'
@@ -7,11 +7,11 @@ import { BadRequestException } from '../exceptions/bad_request';
 import { ErrorCode } from '../exceptions/root';
 
 
-export const signup = async (req:Request, res:Response)=>{
+export const signup = async (req:Request, res:Response, next:NextFunction)=>{
     const {email, password, name} = req.body;
     let user = await prismaClient.user.findFirst({where:{email}})
     if (user){  
-        throw new BadRequestException('User alredy exists',ErrorCode.USER_ALREADY_EXISTS)
+        next( new BadRequestException('User alredy exists',ErrorCode.USER_ALREADY_EXISTS))
     }
     user = await prismaClient.user.create({
         data:{
