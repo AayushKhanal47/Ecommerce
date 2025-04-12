@@ -5,10 +5,14 @@ import * as jwt from 'jsonwebtoken'
 import { JWT_SECRET } from '../secrets'; 
 import { BadRequestException } from '../exceptions/bad_request';
 import { ErrorCode } from '../exceptions/root';
+import { UnprocessableEntity } from '../exceptions/validate';
+import { SignUpSchema } from '../schema/users';
 
 
 export const signup = async (req:Request, res:Response, next:NextFunction)=>{
-    const {email, password, name} = req.body;
+    try {
+        SignUpSchema.parse(req.body)
+        const {email, password, name} = req.body;
     let user = await prismaClient.user.findFirst({where:{email}})
     if (user){  
         next( new BadRequestException('User alredy exists',ErrorCode.USER_ALREADY_EXISTS))
@@ -21,6 +25,10 @@ export const signup = async (req:Request, res:Response, next:NextFunction)=>{
         }
     })
     res.json(user)
+    } catch (err:any) {
+        next(new UnprocessableEntity(err?.issues, "Unprocessabele entity", ErrorCode.UNPROCESSABLE_ENTITY))
+    }
+    
 }
 
 export const login = async (req:Request, res:Response)=>{
